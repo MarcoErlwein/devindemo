@@ -1,6 +1,9 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,43 +12,68 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2 } from 'lucide-react'
 
+const registerSchema = z.object({
+  full_name: z
+    .string()
+    .min(1, 'Nombre completo es requerido')
+    .min(2, 'Nombre debe tener al menos 2 caracteres'),
+  email: z
+    .string()
+    .min(1, 'Email es requerido')
+    .email('Formato de email inválido'),
+  organization: z
+    .string()
+    .min(1, 'Organización es requerida')
+    .min(2, 'Organización debe tener al menos 2 caracteres'),
+  role: z.enum(['admin', 'support', 'user']),
+  password: z
+    .string()
+    .min(1, 'Contraseña es requerida')
+    .min(6, 'Contraseña debe tener al menos 6 caracteres'),
+  confirmPassword: z
+    .string()
+    .min(1, 'Confirmación de contraseña es requerida')
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Las contraseñas no coinciden',
+  path: ['confirmPassword']
+})
+
+type RegisterFormData = z.infer<typeof registerSchema>
+
 const RegisterForm: React.FC = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
-    full_name: '',
-    organization: '',
-    role: 'user' as 'admin' | 'support' | 'user'
-  })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { register } = useAuth()
+  const { register: authRegister } = useAuth()
   const navigate = useNavigate()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors, isSubmitting }
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      full_name: '',
+      email: '',
+      organization: '',
+      role: 'user',
+      password: '',
+      confirmPassword: ''
+    }
+  })
+
+  const onSubmit = async (data: RegisterFormData) => {
     setError('')
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Las contraseñas no coinciden')
-      return
-    }
-
-    if (formData.password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres')
-      return
-    }
-
     setLoading(true)
 
     try {
-      await register({
-        email: formData.email,
-        password: formData.password,
-        full_name: formData.full_name,
-        organization: formData.organization,
-        role: formData.role
+      await authRegister({
+        email: data.email,
+        password: data.password,
+        full_name: data.full_name,
+        organization: data.organization,
+        role: data.role
       })
       navigate('/dashboard')
     } catch (err) {
@@ -53,10 +81,6 @@ const RegisterForm: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
   }
 
   return (
@@ -69,7 +93,7 @@ const RegisterForm: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
@@ -81,11 +105,12 @@ const RegisterForm: React.FC = () => {
               <Input
                 id="full_name"
                 type="text"
-                value={formData.full_name}
-                onChange={(e) => handleInputChange('full_name', e.target.value)}
-                required
+                {...register('full_name')}
                 placeholder="Juan Pérez"
               />
+              {errors.full_name && (
+                <p className="text-sm text-red-600">{errors.full_name.message}</p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -93,11 +118,12 @@ const RegisterForm: React.FC = () => {
               <Input
                 id="email"
                 type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                required
+                {...register('email')}
                 placeholder="tu@email.com"
               />
+              {errors.email && (
+                <p className="text-sm text-red-600">{errors.email.message}</p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -105,16 +131,17 @@ const RegisterForm: React.FC = () => {
               <Input
                 id="organization"
                 type="text"
-                value={formData.organization}
-                onChange={(e) => handleInputChange('organization', e.target.value)}
-                required
+                {...register('organization')}
                 placeholder="Mi Empresa S.A."
               />
+              {errors.organization && (
+                <p className="text-sm text-red-600">{errors.organization.message}</p>
+              )}
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="role">Rol</Label>
-              <Select value={formData.role} onValueChange={(value) => handleInputChange('role', value)}>
+              <Select defaultValue="user" onValueChange={(value) => setValue('role', value as 'admin' | 'support' | 'user')}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona un rol" />
                 </SelectTrigger>
@@ -124,6 +151,9 @@ const RegisterForm: React.FC = () => {
                   <SelectItem value="admin">Administrador</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.role && (
+                <p className="text-sm text-red-600">{errors.role.message}</p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -131,11 +161,12 @@ const RegisterForm: React.FC = () => {
               <Input
                 id="password"
                 type="password"
-                value={formData.password}
-                onChange={(e) => handleInputChange('password', e.target.value)}
-                required
+                {...register('password')}
                 placeholder="••••••••"
               />
+              {errors.password && (
+                <p className="text-sm text-red-600">{errors.password.message}</p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -143,15 +174,16 @@ const RegisterForm: React.FC = () => {
               <Input
                 id="confirmPassword"
                 type="password"
-                value={formData.confirmPassword}
-                onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                required
+                {...register('confirmPassword')}
                 placeholder="••••••••"
               />
+              {errors.confirmPassword && (
+                <p className="text-sm text-red-600">{errors.confirmPassword.message}</p>
+              )}
             </div>
             
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" className="w-full" disabled={loading || isSubmitting}>
+              {(loading || isSubmitting) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Crear Cuenta
             </Button>
           </form>
