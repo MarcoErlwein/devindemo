@@ -8,6 +8,7 @@ import TicketForm from './components/TicketForm'
 import TicketDetail from './components/TicketDetail'
 import AdminPanel from './components/AdminPanel'
 import Navbar from './components/Navbar'
+import Footer from './components/Footer'
 import { Toaster } from '@/components/ui/toaster'
 
 function AppContent() {
@@ -22,42 +23,45 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {user && <Navbar />}
-      <Routes>
-        <Route 
-          path="/login" 
-          element={user ? <Navigate to="/dashboard" /> : <LoginForm />} 
-        />
-        <Route 
-          path="/register" 
-          element={user ? <Navigate to="/dashboard" /> : <RegisterForm />} 
-        />
-        <Route 
-          path="/dashboard" 
-          element={user ? <Dashboard /> : <Navigate to="/login" />} 
-        />
-        <Route 
-          path="/tickets" 
-          element={user ? <TicketList /> : <Navigate to="/login" />} 
-        />
-        <Route 
-          path="/tickets/new" 
-          element={user ? <TicketForm /> : <Navigate to="/login" />} 
-        />
-        <Route 
-          path="/tickets/:id" 
-          element={user ? <TicketDetail /> : <Navigate to="/login" />} 
-        />
-        <Route 
-          path="/admin" 
-          element={user?.role === 'admin' ? <AdminPanel /> : <Navigate to="/dashboard" />} 
-        />
-        <Route 
-          path="/" 
-          element={user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} 
-        />
-      </Routes>
+      <main className="flex-1">
+        <Routes>
+          <Route 
+            path="/login" 
+            element={user ? <Navigate to="/dashboard" /> : <LoginForm />} 
+          />
+          <Route 
+            path="/register" 
+            element={user ? <Navigate to="/dashboard" /> : <RegisterForm />} 
+          />
+          <Route 
+            path="/dashboard" 
+            element={user ? <Dashboard /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/tickets" 
+            element={user ? <TicketList /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/tickets/new" 
+            element={user ? <TicketForm /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/tickets/:id" 
+            element={user ? <TicketDetail /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/admin" 
+            element={user?.role === 'admin' ? <AdminPanel /> : <Navigate to="/dashboard" />} 
+          />
+          <Route 
+            path="/" 
+            element={user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} 
+          />
+        </Routes>
+      </main>
+      {user && <Footer />}
       <Toaster />
     </div>
   )
