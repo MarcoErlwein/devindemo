@@ -12,6 +12,7 @@ interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<void>
   register: (userData: RegisterData) => Promise<void>
+  updateUser: (userData: Partial<User>) => Promise<void>
   logout: () => void
   loading: boolean
 }
@@ -123,6 +124,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }
 
+  const updateUser = async (userData: Partial<User>) => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      throw new Error('No hay sesión activa')
+    }
+
+    const response = await fetch(`${API_URL}/api/auth/profile`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.detail || 'Error al actualizar perfil')
+    }
+
+    const updatedUser = await response.json()
+    setUser(updatedUser)
+  }
+
   const logout = () => {
     localStorage.removeItem('token')
     setUser(null)
@@ -132,6 +157,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     login,
     register,
+    updateUser,
     logout,
     loading,
   }

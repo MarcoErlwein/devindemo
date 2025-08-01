@@ -2,7 +2,7 @@ import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Button } from '@/components/ui/button'
-import { LogOut, Home, Ticket, Settings } from 'lucide-react'
+import { LogOut, Home, Ticket, Settings, User } from 'lucide-react'
 
 const Navbar: React.FC = () => {
   const { user, logout } = useAuth()
@@ -59,6 +59,17 @@ const Navbar: React.FC = () => {
                  user?.role === 'support' ? 'Soporte' : 'Usuario'}
               </span>
             </div>
+            
+            <Link to="/profile">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center space-x-1"
+              >
+                <User className="h-4 w-4" />
+                <span>Perfil</span>
+              </Button>
+            </Link>
             
             <Button 
               variant="outline" 

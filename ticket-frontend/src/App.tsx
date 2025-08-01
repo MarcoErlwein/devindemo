@@ -7,6 +7,7 @@ import TicketList from './components/TicketList'
 import TicketForm from './components/TicketForm'
 import TicketDetail from './components/TicketDetail'
 import AdminPanel from './components/AdminPanel'
+import UserProfile from './components/UserProfile'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import { Toaster } from '@/components/ui/toaster'
@@ -54,6 +55,10 @@ function AppContent() {
           <Route 
             path="/admin" 
             element={user?.role === 'admin' ? <AdminPanel /> : <Navigate to="/dashboard" />} 
+          />
+          <Route 
+            path="/profile" 
+            element={user ? <UserProfile /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/" 
