@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Mail, Lock } from 'lucide-react'
 
 const loginSchema = z.object({
   email: z
@@ -70,12 +70,16 @@ const LoginForm: React.FC = () => {
             
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                {...register('email')}
-                placeholder="tu@email.com"
-              />
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  id="email"
+                  type="email"
+                  {...register('email')}
+                  placeholder="tu@email.com"
+                  className="pl-10"
+                />
+              </div>
               {errors.email && (
                 <p className="text-sm text-red-600">{errors.email.message}</p>
               )}
@@ -83,12 +87,16 @@ const LoginForm: React.FC = () => {
             
             <div className="space-y-2">
               <Label htmlFor="password">Contraseña</Label>
-              <Input
-                id="password"
-                type="password"
-                {...register('password')}
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  id="password"
+                  type="password"
+                  {...register('password')}
+                  placeholder="••••••••"
+                  className="pl-10"
+                />
+              </div>
               {errors.password && (
                 <p className="text-sm text-red-600">{errors.password.message}</p>
               )}
