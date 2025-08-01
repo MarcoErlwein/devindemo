@@ -43,6 +43,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true)
 
   const API_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:8000'
+  console.log('Using API URL:', API_URL)
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -96,22 +97,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }
 
   const register = async (userData: RegisterData) => {
-    const response = await fetch(`${API_URL}/api/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(userData),
-    })
+    try {
+      const response = await fetch(`${API_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      })
 
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.detail || 'Error al registrarse')
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.detail || 'Error al registrarse')
+      }
+
+      const data = await response.json()
+      localStorage.setItem('token', data.access_token)
+      setUser(data.user)
+    } catch (err) {
+      console.error('Registration error:', err)
+      if (err instanceof TypeError && err.message.includes('fetch')) {
+        throw new Error('No se pudo conectar con el servidor. Verifica tu conexión a internet.')
+      }
+      throw err
     }
-
-    const data = await response.json()
-    localStorage.setItem('token', data.access_token)
-    setUser(data.user)
   }
 
   const logout = () => {
