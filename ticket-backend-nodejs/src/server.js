@@ -215,6 +215,48 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
   });
 });
 
+app.put('/api/auth/profile', [
+  authenticateToken,
+  body('email').optional().isEmail().withMessage('Email inválido'),
+  body('full_name').optional().notEmpty().withMessage('Nombre completo no puede estar vacío'),
+  body('organization').optional().notEmpty().withMessage('Organización no puede estar vacía'),
+  handleValidationErrors
+], (req, res) => {
+  try {
+    const { email, full_name, organization } = req.body;
+    const userId = req.user.id;
+    const user = users.get(userId);
+
+    if (!user) {
+      return res.status(404).json({ detail: 'Usuario no encontrado' });
+    }
+
+    if (email && email !== user.email) {
+      const existingUser = Array.from(users.values()).find(u => u.email === email && u.id !== userId);
+      if (existingUser) {
+        return res.status(400).json({ detail: 'El email ya está registrado' });
+      }
+    }
+
+    if (email !== undefined) user.email = email;
+    if (full_name !== undefined) user.full_name = full_name;
+    if (organization !== undefined) user.organization = organization;
+
+    users.set(userId, user);
+
+    res.json({
+      id: user.id,
+      email: user.email,
+      full_name: user.full_name,
+      organization: user.organization,
+      role: user.role
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ detail: 'Error interno del servidor' });
+  }
+});
+
 app.post('/api/tickets', [
   authenticateToken,
   body('title').notEmpty().withMessage('Título es requerido'),
